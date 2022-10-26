@@ -1,0 +1,22 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/KLB_Monitor/obj/project.nuget.cache
+/KLB_Monitor/obj/project.assets.json
+/KLB_Monitor/obj/KLB_Monitor.csproj.nuget.g.targets
+/KLB_Monitor/obj/KLB_Monitor.csproj.nuget.g.props
+/KLB_Monitor/obj/KLB_Monitor.csproj.nuget.dgspec.json
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.GlobalUsings.g.cs
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.GeneratedMSBuildEditorConfig.editorconfig
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.csproj.AssemblyReference.cache
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.assets.cache
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.AssemblyInfoInputs.cache
+/KLB_Monitor/obj/Debug/net6.0-windows/KLB_Monitor.AssemblyInfo.cs
+/KLB_Monitor/obj/Debug/net6.0-windows/.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+/KLB_Monitor/obj/Debug/net6.0-windows
+/KLB_Monitor/obj
+/.vs/KLB_Monitor/FileContentIndex/read.lock
+/.vs/KLB_Monitor/FileContentIndex/a43ca51a-962b-45be-96ea-727b79078543.vsidx
+/.vs/KLB_Monitor/FileContentIndex/3686e06b-09dd-4b4b-ba98-a13044bbd802.vsidx
+/.vs/KLB_Monitor/FileContentIndex
