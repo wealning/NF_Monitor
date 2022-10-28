@@ -22,8 +22,6 @@ using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
-//using EpsonNetSDK;
-//using static EpsonNetSDK.EpsonAPI;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace KLB_Monitor
