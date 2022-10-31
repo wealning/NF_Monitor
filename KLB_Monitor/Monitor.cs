@@ -548,7 +548,8 @@ namespace KLB_Monitor
         private void UpdateVersion()
         {
             if (Global.param.download_url.IsNullOrEmpty() 
-                || Global.param.update_version.IsNullOrEmpty()
+                || Global.param.update_filePath.IsNullOrEmpty()
+                || Global.param.update_fileVersion.IsNullOrEmpty()
                 || Global.param.cef_exe_full_path.IsNullOrEmpty())
             {
                 StepDetailsShow($"下载地址、版本号、壳体程序完整地址等不能为空");
@@ -559,7 +560,8 @@ namespace KLB_Monitor
             {
                 string cef_dir_path = Path.GetDirectoryName(Global.param.cef_exe_full_path);
                 string cef_name = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
-                string file = Path.Combine(Global.param.download_url, Global.param.update_version);
+                string extension = Path.GetExtension(Global.param.cef_exe_full_path);
+                string file = Global.param.download_url + "/" + Global.param.update_filePath;
 
                 #region 停止程序
                 Process[] arrayProcess = Process.GetProcessesByName(cef_name);
@@ -574,7 +576,7 @@ namespace KLB_Monitor
                 #endregion
 
                 #region 下载
-                var fileName = Global.param.update_version;
+                var fileName = $"{cef_name}{extension}";
                 if (!Directory.Exists(cef_dir_path))
                 {
                     Directory.CreateDirectory(cef_dir_path);
@@ -589,15 +591,13 @@ namespace KLB_Monitor
                 long progressBarValue = 0;
                 int realReadLen = netStream.Read(read, 0, read.Length);
 
-                progressBar1.Value = 0;
-                progressBar1.Visible = true;
-                label5.Visible = true;
+                BarShow();
                 StepDetailsShow($"开始下载更新包");
                 while (realReadLen > 0)
                 {
                     fileStream.Write(read, 0, realReadLen);
                     progressBarValue += realReadLen;
-                    BarShow(Convert.ToInt32(Math.Floor(progressBarValue * 100.0 / total)));
+                    BarUpdate(Convert.ToInt32(Math.Floor(progressBarValue * 100.0 / total)));
                     realReadLen = netStream.Read(read, 0, read.Length);
                 }
                 netStream.Close();
@@ -613,7 +613,7 @@ namespace KLB_Monitor
 
                 #region 更新版本号
                 StreamWriter sw = new StreamWriter(Path.Combine(cef_dir_path, VersionFile));
-                sw.Write(Global.param.update_version);
+                sw.Write(Global.param.update_fileVersion);
                 sw.Close();
                 StepDetailsShow($"版本号更新完成");
                 #endregion
@@ -624,7 +624,7 @@ namespace KLB_Monitor
                 #endregion
 
                 #region 回传版本信息
-                if(!server.FeedBackVersion(server_url, device_id, Global.param.update_version))
+                if(!server.FeedBackVersion(server_url, device_id, Global.param.update_fileVersion))
                 {
                     StepDetailsShow("回传版本号失败");
                 }
@@ -635,6 +635,11 @@ namespace KLB_Monitor
             {
                 _Logger.Error($"更新失败：{ex.Message}");
                 StepDetailsShow($"更新失败：{ex.Message}");
+            }
+            finally
+            {
+                Global.param.update_filePath = string.Empty;
+                Global.param.update_fileVersion = string.Empty;
             }
         }
 
@@ -1020,7 +1025,7 @@ namespace KLB_Monitor
         /// 更新进度条进度
         /// </summary>
         /// <param name="value"></param>
-        private void BarShow(int value)
+        private void BarUpdate(int value)
         {
             this.Invoke(new Action(() =>
             {
@@ -1028,6 +1033,20 @@ namespace KLB_Monitor
                 label5.Text = $"{value}%";
             }));
             Application.DoEvents();
+        }
+
+        /// <summary>
+        /// 更新进度条展示
+        /// </summary>
+        private void BarShow()
+        {
+            this.Invoke(new Action(() =>
+            {
+                progressBar1.Value = 0;
+                progressBar1.Visible = true;
+                label5.Visible = true;
+            }));
+            
         }
 
         /// <summary>

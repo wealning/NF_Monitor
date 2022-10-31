@@ -34,7 +34,7 @@ namespace KLB_Monitor.Model.Enum
         /// <summary>
         /// 截屏
         /// </summary>
-        ScreenShot = 2002,
+        ScreenShot = 1004,
     }
 
     /// <summary>

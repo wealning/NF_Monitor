@@ -78,7 +78,12 @@ namespace KLB_Monitor.Model.response
         public string code { get; set; }
 
         /// <summary>
-        /// 更新包名称
+        /// 更新包路径
+        /// </summary>
+        public string filePath { get; set; }
+
+        /// <summary>
+        /// 版本号
         /// </summary>
         public string fileName { get; set; }
     }

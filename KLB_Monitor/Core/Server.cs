@@ -96,6 +96,9 @@ namespace KLB_Monitor.Core
                         middle_url = para.middle_url,
                     };
 
+                    //TO DO
+                    Global.param.cef_exe_full_path = "E:\\debug\\KLB_Self_CEF.exe";
+
                     if (para.printer_name.IsNotNullOrEmpty())
                     {
                         string[] strArr = para.printer_name.Split(',');
@@ -201,12 +204,16 @@ namespace KLB_Monitor.Core
                 {
                     if (data.data != null && data.data.fileName.IsNotNullOrEmpty())
                     {
-                        Global.param.update_version = data.data?.fileName ?? "";
+                        Global.param.update_filePath = data.data?.filePath ?? "";
+                        Global.param.update_fileVersion = data.data?.fileName ?? "";
+                        //Global.param.update_version = Global.param.update_version.Replace("/", "\\");
+                        if (Global.param.update_filePath.StartsWith("/"))
+                        {
+                            Global.param.update_filePath = Global.param.update_filePath.Substring(1, Global.param.update_filePath.Length - 1);
+                        }
+
                     }
-                    else
-                    {
-                        Global.param.update_version = string.Empty;
-                    }
+                    
                     return data.data.code.ToInt();
                 }
                 else

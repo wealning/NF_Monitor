@@ -68,9 +68,14 @@ namespace KLB_Monitor.Model.Global
         public string download_url { get; set; }
 
         /// <summary>
-        /// 更新包名称
+        /// 更新包下载地址
         /// </summary>
-        public string update_version { get; set; }
+        public string update_filePath { get; set; }
+
+        /// <summary>
+        /// 更新包真实版本
+        /// </summary>
+        public string update_fileVersion { get; set; }
 
         /// <summary>
         /// 打印机名称列表
