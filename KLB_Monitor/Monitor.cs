@@ -822,7 +822,7 @@ namespace KLB_Monitor
 
         #region ¼à¿Ø
         /// <summary>
-        /// ¿ÇÌå¼à¿Ø TO DO
+        /// ¿ÇÌå¼à¿Ø
         /// </summary>
         private void ShellMonitor()
         {
@@ -837,7 +837,7 @@ namespace KLB_Monitor
                     {
                         if(!this.IsErr && !this.IsShellErr)
                         {
-                            //Task.Run(() => { OpenErrWindow("¿ÇÌåÆô¶¯Ê§°Ü", (int)EnumErrorLevel.Shell); });
+                            Task.Run(() => { OpenErrWindow("¿ÇÌåÆô¶¯Ê§°Ü", (int)EnumErrorLevel.Shell); });
                         }
                     }
                     else

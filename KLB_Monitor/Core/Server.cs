@@ -96,9 +96,6 @@ namespace KLB_Monitor.Core
                         middle_url = para.middle_url,
                     };
 
-                    //TO DO
-                    Global.param.cef_exe_full_path = "E:\\debug\\KLB_Self_CEF.exe";
-
                     if (para.printer_name.IsNotNullOrEmpty())
                     {
                         string[] strArr = para.printer_name.Split(',');
@@ -139,7 +136,7 @@ namespace KLB_Monitor.Core
         }
 
         /// <summary>
-        /// 回传版本号   TO DO
+        /// 回传版本号
         /// </summary>
         /// <param name="url"></param>
         /// <param name="device_id"></param>
@@ -159,7 +156,7 @@ namespace KLB_Monitor.Core
                     device_id = device_id,
                     version = version,
                 };
-                _Logger.Debug($"回传版本号 请求");
+                _Logger.Debug($"回传版本号 请求{JsonConvert.SerializeObject(request)}");
                 var result = HttpUtil.Post($"{url}/third/updateVersion", JsonConvert.SerializeObject(request));
                 _Logger.Debug($"回传版本号 返回：{result}");
                 var data = JsonConvert.DeserializeObject<BaseRsp<string>>(result);
@@ -266,7 +263,7 @@ namespace KLB_Monitor.Core
         }
 
         /// <summary>
-        /// 文件上传 TO DO
+        /// 文件上传
         /// </summary>
         /// <param name="url"></param>
         /// <param name="device_id"></param>
