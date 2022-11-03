@@ -23,3 +23,5 @@
 /.vs
 /KLB_Monitor/bin/Debug/net6.0-windows
 /KLB_Monitor/bin/Debug
+/KLB_Monitor/bin/x86/Release
+/KLB_Monitor/bin/x86/Debug
