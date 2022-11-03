@@ -708,11 +708,11 @@ namespace KLB_Monitor
                 ScreenShot sc = new ScreenShot();
                 Image img = sc.CaptureScreen();
                 string dir_path = Path.Combine(Application.StartupPath, "Shot");
-                string file_path = Path.Combine(Application.StartupPath, "Shot/Shot.png");
+                string file_path = Path.Combine(dir_path, "Shot.png");
 
-                if (!System.IO.Directory.Exists(dir_path))
+                if (!Directory.Exists(dir_path))
                 {
-                    System.IO.Directory.CreateDirectory(dir_path);
+                    Directory.CreateDirectory(dir_path);
                 }
                 img.Save(file_path, System.Drawing.Imaging.ImageFormat.Png);
 
