@@ -23,13 +23,18 @@ namespace KLB_Monitor.Core
         {
             try
             {
-                Bitmap bmp = new Bitmap(imagePath);
-                MemoryStream ms = new MemoryStream();
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                byte[] bytes = new byte[ms.Length];
-                ms.Position = 0;
-                ms.Read(bytes, 0, (int)ms.Length);
-                ms.Close();
+                
+                byte[] bytes = new byte[8];
+                using (Bitmap bmp = new Bitmap(imagePath))
+                {
+                    MemoryStream ms = new MemoryStream();
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    bytes = new byte[ms.Length];
+                    ms.Position = 0;
+                    ms.Read(bytes, 0, (int)ms.Length);
+                    ms.Close();
+                }
+                
                 return Convert.ToBase64String(bytes);
             }
             catch (Exception ex)

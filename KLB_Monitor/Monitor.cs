@@ -65,6 +65,7 @@ namespace KLB_Monitor
         private bool IsSystemErr = false; //错误范围：联网失败
         private bool IsThirdErr = false;  //错误范围：中间件、HIS、打印机监控异常
         private bool IsShellErr = false;  //错误范围：壳体系统异常
+        private bool IsHisMonitor = false;  //是否启用HIS监控
         #endregion
         #endregion
 
@@ -193,6 +194,13 @@ namespace KLB_Monitor
                 MiddleRetryCount = retrycount3.ToInt();
             }
 
+            var monitor_state  = ConfigurationManager.AppSettings.Get("IsHisMonitor") ?? "";
+            if (monitor_state.IsNotNullOrEmpty() && monitor_state.ToLower().Equals("true"))
+            {
+                IsHisMonitor = true;
+            }
+            
+
             if (!server.IsConnet(server_url, device_id))
             {
                 StepDetailsShow($"服务端{server_url}访问失败");
@@ -256,9 +264,7 @@ namespace KLB_Monitor
         /// </summary>
         private void ParamInit()
         {
-            string version = "";
-            string devicename = "";
-            var err_msg = server.GetParameter(server_url, device_id, ref version, ref devicename);
+            var err_msg = server.GetParameter(server_url, device_id);
             if (err_msg.IsNotNullOrEmpty())
             {
                 StepDetailsShow(err_msg);
@@ -267,8 +273,8 @@ namespace KLB_Monitor
             }
             else
             {
-                UpdateShowVerion(version);
-                UpdateShowDeviceName(devicename);
+                UpdateShowVerion(Global.param.version);
+                UpdateShowDeviceName(Global.param.device_name);
             }
         }
         #endregion
@@ -341,7 +347,8 @@ namespace KLB_Monitor
             _Logger.Info("壳体日志清除开始");
             if((Global.param?.cef_exe_full_path ?? "").IsNotNullOrEmpty())
             {
-                string shell_file = Path.Combine(Path.GetDirectoryName(Global.param.cef_exe_full_path), "Logs");
+                string filePath = Path.GetDirectoryName(Global.param.cef_exe_full_path);
+                string shell_file = Path.Combine(Path.GetDirectoryName(filePath), "Logs");
                 try
                 {
                     this.DeleteDir(shell_file, keepTime);
@@ -366,11 +373,11 @@ namespace KLB_Monitor
             {
                 //去除文件夹和子文件的只读属性
                 //去除文件夹的只读属性
-                System.IO.DirectoryInfo fileInfo = new DirectoryInfo(file);
+                DirectoryInfo fileInfo = new DirectoryInfo(file);
                 fileInfo.Attributes = FileAttributes.Normal & FileAttributes.Directory;
 
                 //去除文件的只读属性
-                System.IO.File.SetAttributes(file, System.IO.FileAttributes.Normal);
+                File.SetAttributes(file, FileAttributes.Normal);
 
                 //判断文件夹是否还存在
                 if (Directory.Exists(file))
@@ -404,7 +411,7 @@ namespace KLB_Monitor
             }
             catch (Exception ex) // 异常处理
             {
-                Console.WriteLine(ex.Message.ToString());// 异常信息
+                _Logger.Error($"DeleteDir Fail{ex.Message}\r\n{ex.StackTrace}");
             }
         }
         
@@ -413,7 +420,9 @@ namespace KLB_Monitor
         /// </summary>
         private void ShutDown()
         {
-            if (Global.param != null && Global.param.auto_shutdown_time.IsNotNullOrEmpty() && Global.param.auto_shutdown_time.Length == 4 && string.Compare(DateTime.Now.ToString("HHmm"), Global.param.auto_shutdown_time) >= 0)
+            if (Global.param != null && Global.param.auto_shutdown_time.IsNotNullOrEmpty() 
+                && Global.param.auto_shutdown_time.Length == 4 
+                && string.Compare(DateTime.Now.ToString("HHmm"), Global.param.auto_shutdown_time) >= 0)
             {
                 Process.Start("shutdown.exe", "-s");//关机
             }
@@ -547,10 +556,11 @@ namespace KLB_Monitor
         /// </summary>
         private void UpdateVersion()
         {
-            if (Global.param.download_url.IsNullOrEmpty() 
+            if (Global.param != null 
+                && (Global.param.download_url.IsNullOrEmpty() 
                 || Global.param.update_filePath.IsNullOrEmpty()
                 || Global.param.update_fileVersion.IsNullOrEmpty()
-                || Global.param.cef_exe_full_path.IsNullOrEmpty())
+                || Global.param.cef_exe_full_path.IsNullOrEmpty()))
             {
                 StepDetailsShow($"下载地址、版本号、壳体程序完整地址等不能为空");
                 return;
@@ -561,7 +571,7 @@ namespace KLB_Monitor
                 string cef_dir_path = Path.GetDirectoryName(Global.param.cef_exe_full_path);
                 string cef_name = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
                 string extension = Path.GetExtension(Global.param.cef_exe_full_path);
-                string file = Global.param.download_url + "/" + Global.param.update_filePath;
+                string file = $"{Global.param.download_url}/{Global.param.update_filePath}";
 
                 #region 停止程序
                 Process[] arrayProcess = Process.GetProcessesByName(cef_name);
@@ -611,7 +621,7 @@ namespace KLB_Monitor
                 StepDetailsShow($"更新包解压完成");
                 #endregion
 
-                #region 更新版本号
+                #region 本地更新版本号
                 StreamWriter sw = new StreamWriter(Path.Combine(cef_dir_path, VersionFile));
                 sw.Write(Global.param.update_fileVersion);
                 sw.Close();
@@ -862,7 +872,7 @@ namespace KLB_Monitor
         {
             try
             {
-                if (Global.param == null || this.IsThirdErr)
+                if (Global.param == null || this.IsThirdErr || !IsHisMonitor)
                 {
                     return;
                 }
@@ -1046,7 +1056,7 @@ namespace KLB_Monitor
                 progressBar1.Visible = true;
                 label5.Visible = true;
             }));
-            
+            Application.DoEvents();
         }
 
         /// <summary>

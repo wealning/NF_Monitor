@@ -26,7 +26,7 @@ namespace KLB_Monitor.Core
         }
 
         /// <summary>
-        /// 连接状态
+        /// 服务端连接状态
         /// </summary>
         /// <returns></returns>
         public bool IsConnet(string url, string device_id, int status = 0)
@@ -41,7 +41,10 @@ namespace KLB_Monitor.Core
             try
             {
                 var result = HttpUtil.Post($"{url}/third/updateHeartTime", JsonConvert.SerializeObject(request));
-                _Logger.Debug($"检查连接状态 请求");
+                if (status.Equals(1))
+                {
+                    _Logger.Debug($"检查连接状态 请求 status:1");
+                }
                 var data = JsonConvert.DeserializeObject<BaseRsp<string>>(result);
                 _Logger.Debug($"检查连接状态 返回：{result}");
                 if (data != null && data.code == (int)EnumCommunicationStatus.Success)
@@ -68,15 +71,15 @@ namespace KLB_Monitor.Core
         /// </summary>
         /// <param name="url"></param>
         /// <param name="device_id"></param>
-        public string GetParameter(string url,string device_id, ref string version, ref string device_name)
+        public string GetParameter(string url,string device_id)
         {
+            if (!Global.IsConnect)
+            {
+                return "获取参数失败，服务端连接异常";
+            }
+
             try
             {
-                if (!Global.IsConnect)
-                {
-                    return "获取参数失败，服务端连接异常";
-                }
-                _Logger.Debug($"获取设备参数 请求");
                 var result = HttpUtil.Get($"{url}/third/getMonitorPara?device_id={device_id.ToLong()}");
                 _Logger.Debug($"获取设备参数 返回：{result}");
                 var data = JsonConvert.DeserializeObject<BaseRsp<param_rsp>>(result);
@@ -86,17 +89,17 @@ namespace KLB_Monitor.Core
                     var para = data.data;
                     Global.param = new Param
                     {
-                        device_name = para.device_name,
-                        version = para.version,
-                        download_url = para.download_url,
-                        auto_shutdown_time = para.auto_shutdown_time,
-                        cef_exe_full_path = para.cef_exe_full_path,
-                        his_exe_full_path = para.his_exe_full_path,
+                        device_name = para?.device_name ?? "",
+                        version = para?.version ?? "",
+                        download_url = para?.download_url ?? "",
+                        auto_shutdown_time = para?.auto_shutdown_time ?? "",
+                        cef_exe_full_path = para?.cef_exe_full_path ?? "",
+                        his_exe_full_path = para?.his_exe_full_path ?? "",
                         printeNameList = new List<string>(),
-                        middle_url = para.middle_url,
+                        middle_url = para?.middle_url ?? "",
                     };
-
-                    if (para.printer_name.IsNotNullOrEmpty())
+                    //打印机名称拆分
+                    if ((para?.printer_name ?? "").IsNotNullOrEmpty())
                     {
                         string[] strArr = para.printer_name.Split(',');
                         foreach (var item in strArr)
@@ -107,22 +110,19 @@ namespace KLB_Monitor.Core
                             }
                         }
                     }
-
+                    //
                     if(Global.param.middle_url.IsNotNullOrEmpty()
-                        &&Global.param.middle_url.EndsWith("/")
-                        && Global.param.middle_url.EndsWith("\\"))
+                        && (Global.param.middle_url.EndsWith("/") || Global.param.middle_url.EndsWith("\\")))
                     {
                         Global.param.middle_url = Global.param.middle_url.Substring(0, Global.param.middle_url.Length - 1);
                     }
 
-                    version = para.version;
-                    device_name = para.device_name;
                 }
                 else
                 {
                     Global.param = new Param();
-                    _Logger.Error($"获取参数失败：{data?.code} - {data.msg}");
-                    return $"获取参数失败：{data?.code} - {data.msg}";
+                    _Logger.Error($"获取参数失败：{data?.code} - {data?.msg}");
+                    return $"获取参数失败：{data?.code} - {data?.msg}";
                 }
             }
             catch (Exception ex)
@@ -192,7 +192,6 @@ namespace KLB_Monitor.Core
 
             try
             {
-                _Logger.Debug($"获取操作指令 请求");
                 var result = HttpUtil.Get($"{url}/third/getCmd?device_id={device_id.ToLong()}");
                 _Logger.Debug($"获取操作指令 返回：{result}");
                 var data = JsonConvert.DeserializeObject<BaseRsp<command_rsp>>(result);
@@ -210,8 +209,8 @@ namespace KLB_Monitor.Core
                         }
 
                     }
-                    
-                    return data.data.code.ToInt();
+
+                    return (data?.data?.code ?? "").ToInt();
                 }
                 else
                 {

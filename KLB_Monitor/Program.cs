@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Security.Principal;
 
@@ -52,14 +54,16 @@ namespace KLB_Monitor
             //
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            //ServiceCollection services = new ServiceCollection();
+            //var serviceProvider = services.BuildServiceProvider();
+            //var frm = serviceProvider.GetRequiredService<Monitor>();
+
+            //Application.Run(frm);
+
             Application.Run(new Monitor());
 
-            //Application.ApplicationExit += Application_ApplicationExit;
         }
-
-        private static void Application_ApplicationExit(object sender, EventArgs e)
-        {
-            //KeepAliveManager.StopAll();
-        }
+        
     }
 }
