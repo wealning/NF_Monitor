@@ -529,6 +529,7 @@ namespace KLB_Monitor
 
                     if(ConnectRetryCount >= 10 && !this.IsErr)
                     {
+                        //_Logger.Info("start CheckConnect");
                         Task.Run(() => { OpenErrWindow("联网异常", (int)EnumErrorLevel.System); });
                     }
                 }
@@ -847,6 +848,8 @@ namespace KLB_Monitor
                     {
                         if(!this.IsErr && !this.IsShellErr)
                         {
+                            //_Logger.Info("start ShellMonitor");
+
                             Task.Run(() => { OpenErrWindow("壳体启动失败", (int)EnumErrorLevel.Shell); });
                         }
                     }
@@ -898,6 +901,7 @@ namespace KLB_Monitor
 
                     if (HISRetryFailCount >= HISRetryCount && !this.IsErr)
                     {
+                        //_Logger.Info("start HISMonitor");
                         Task.Run(() => { OpenErrWindow("HIS访问异常，请联系管理人员", (int)EnumErrorLevel.Third); });
                     }
                     else
@@ -936,6 +940,7 @@ namespace KLB_Monitor
                     {
                         if (MiddleRetryFailCount >= MiddleRetryCount && !this.IsErr)
                         {
+                            //_Logger.Info("start MiddleMonitor");
                             Task.Run(() => { OpenErrWindow("中间件运行异常", (int)EnumErrorLevel.Third); });
                         }
 
@@ -983,6 +988,7 @@ namespace KLB_Monitor
                         err_msg = PrinterHelper.GetPrinterStatus(orinary);
                         if (err_msg.IsNotNullOrEmpty() && !this.IsErr)
                         {
+                            //_Logger.Info("start PrinterMonitor");
                             //如果有返回则认为有异常情况
                             Task.Run(() => { OpenErrWindow($"打印机{orinary}异常：{err_msg}", (int)EnumErrorLevel.Third); });
                         }
@@ -1016,6 +1022,7 @@ namespace KLB_Monitor
                         err_msg = EpsonPrinterHelper.GetInfo(epson);
                         if (err_msg.IsNotNullOrEmpty() && !this.IsErr)
                         {
+                            //_Logger.Info("start EpsonPrinterMonitor");
                             Task.Run(() => { OpenErrWindow($"打印机{epson}异常：{err_msg}", (int)EnumErrorLevel.Third); });
                         }
                     }
@@ -1124,7 +1131,6 @@ namespace KLB_Monitor
                             break;
                     }
                     this.IsErr = true;
-
                     FrmErr frm = new FrmErr();
                     frm.Owner = this;
                     frm.TipMsg = msg;
@@ -1148,10 +1154,18 @@ namespace KLB_Monitor
         /// </summary>
         private void ClearErrInfo()
         {
-            this.IsErr = false;
-            this.IsSystemErr = false;
-            this.IsThirdErr = false;
-            this.IsShellErr = false;
+            try
+            {
+                this.IsErr = false;
+                this.IsSystemErr = false;
+                this.IsThirdErr = false;
+                this.IsShellErr = false;
+            }
+            catch (Exception ex)
+            {
+                _Logger.Error($"err init fail：{ex.Message}\r\n{ex.StackTrace}");
+            }
+            
         }
         #endregion
     }

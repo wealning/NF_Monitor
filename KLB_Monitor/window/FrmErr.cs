@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,7 +13,7 @@ namespace KLB_Monitor.window
 {
     public partial class FrmErr : Form
     {
-        public Action _ClearErrInfo;
+        public Action _ClearErrInfo;s
 
         public string TipMsg
         {
@@ -32,23 +33,9 @@ namespace KLB_Monitor.window
         /// <param name="e"></param>
         private void tipLabel_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if(e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
-                DialogResult result = MessageBox.Show("是否处理完成？", "操作提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
-                {
-                    _ClearErrInfo();
-                    this.tipLabel.Text = string.Empty;
-                    this.Close();
-                }
-                else if (result == DialogResult.No)
-                {
-                    //e.Cancel = true;
-                }
-                else if (result == DialogResult.Cancel)
-                {
-                    //e.Cancel = true;
-                }
+                this.Close();
             }
         }
 
@@ -59,7 +46,21 @@ namespace KLB_Monitor.window
         /// <param name="e"></param>
         private void FrmErr_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
+            DialogResult result = MessageBox.Show("是否处理完成？", "操作提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+            {
+                _ClearErrInfo();
+                this.tipLabel.Text = string.Empty;
+                //this.Close();
+            }
+            else if (result == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
+            else if (result == DialogResult.Cancel)
+            {
+                e.Cancel = true;
+            }
         }
 
         private void FrmErr_Load(object sender, EventArgs e)

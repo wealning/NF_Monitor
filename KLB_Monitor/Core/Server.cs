@@ -46,14 +46,15 @@ namespace KLB_Monitor.Core
                     _Logger.Debug($"检查连接状态 请求 status:1");
                 }
                 var data = JsonConvert.DeserializeObject<BaseRsp<string>>(result);
-                _Logger.Debug($"检查连接状态 返回：{result}");
+                //_Logger.Debug($"检查连接状态 返回：{result}");
                 if (data != null && data.code == (int)EnumCommunicationStatus.Success)
                 {
                     IsConnect = true;
                 }
                 else
                 {
-                    _Logger.Error($"连接失败：{data?.code} - {data.msg}");
+                    _Logger.Debug($"检查连接状态 返回：{result}");
+                    _Logger.Error($"连接失败：{data?.code} - {data?.msg}");
                 }
             }
             catch (Exception ex)
