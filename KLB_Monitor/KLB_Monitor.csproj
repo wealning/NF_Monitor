@@ -45,6 +45,9 @@
     <None Update="Printer\EPSON\EpsonNetSDK.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Printer\EPSON\EpsonNetSDKPS.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

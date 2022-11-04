@@ -55,12 +55,6 @@ namespace KLB_Monitor
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            //ServiceCollection services = new ServiceCollection();
-            //var serviceProvider = services.BuildServiceProvider();
-            //var frm = serviceProvider.GetRequiredService<Monitor>();
-
-            //Application.Run(frm);
-
             Application.Run(new Monitor());
 
         }
