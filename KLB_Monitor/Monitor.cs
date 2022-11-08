@@ -45,6 +45,7 @@ namespace KLB_Monitor
         private int ConnectRetryCount = 0;              //连接失败重试的次数
         private int ConnectCount = 0;
         private int MidlleConRetryCount = 0;            //中间件重连尝试次数
+        private bool UpdateProcess = false;             //是否更新程序
 
         //Task
         private BaseTask shutdownTask;
@@ -569,6 +570,7 @@ namespace KLB_Monitor
 
             try
             {
+                UpdateProcess = true;
                 string cef_dir_path = Path.GetDirectoryName(Global.param.cef_exe_full_path);
                 string cef_name = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
                 string extension = Path.GetExtension(Global.param.cef_exe_full_path);
@@ -581,18 +583,24 @@ namespace KLB_Monitor
                     foreach (Process p in arrayProcess)
                     {
                         p.Kill();
+                        StepDetailsShow($"停止目标程序：{p.ProcessName}");
                     }
                 }
                 StepDetailsShow($"壳体程序终止完成");
                 #endregion
 
+                Thread.Sleep(2000);
+
                 #region 下载
-                var fileName = $"{cef_name}{extension}";
+                var zip_filename = Path.GetFileNameWithoutExtension(file);
+                var zip_extension = Path.GetExtension(file);
+                var fileName = $"{zip_filename}{zip_extension}";
                 if (!Directory.Exists(cef_dir_path))
                 {
                     Directory.CreateDirectory(cef_dir_path);
                 }
                 var zip_path = Path.Combine(cef_dir_path, fileName);
+                StepDetailsShow($"即将开始访问");
                 WebRequest request = WebRequest.Create(file);
                 WebResponse respone = request.GetResponse();
                 var total = respone.ContentLength;
@@ -649,6 +657,7 @@ namespace KLB_Monitor
             }
             finally
             {
+                UpdateProcess = false;
                 Global.param.update_filePath = string.Empty;
                 Global.param.update_fileVersion = string.Empty;
             }
@@ -839,6 +848,11 @@ namespace KLB_Monitor
         {
             try
             {
+                if (UpdateProcess)
+                {
+                    return;
+                }
+
                 FileInfo file = new FileInfo(HeartFile);
                 //同时校验壳体上一次被重启的时间，避免频繁重启
                 if (file.LastWriteTime.AddSeconds(10) < DateTime.Now && LastRunTime.AddSeconds(30) < DateTime.Now)

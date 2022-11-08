@@ -1,5 +1,7 @@
 ﻿using BaseUtils;
 using ICSharpCode.SharpZipLib.Zip;
+using log4net;
+using log4net.Repository.Hierarchy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +12,8 @@ namespace KLB_Monitor.Core
 {
     public static class ZIP
     {
+        private static ILog _Logger = LogManager.GetLogger("ZIP");
+
         /// <summary>
         /// 解压
         /// </summary>
@@ -28,54 +32,59 @@ namespace KLB_Monitor.Core
                 Directory.CreateDirectory(unzip_path);
             }
 
-            ZipInputStream s = new ZipInputStream(File.OpenRead(zip_filename));
-            ZipEntry theEntry;
-
-            while ((theEntry = s.GetNextEntry()) != null)
+            using (ZipInputStream s = new ZipInputStream(File.OpenRead(zip_filename)))
             {
-                string file_name = System.IO.Path.GetFileName(theEntry.Name);
-                string path = System.IO.Path.GetDirectoryName(theEntry.Name) ?? "";
-                var write_file = Path.Combine(unzip_path, path, file_name);
-                DateTime dt = theEntry.DateTime;
+                ZipEntry theEntry;
 
-                //  生成解压目录
-                if (!Directory.Exists(Path.Combine(unzip_path, path)))
+                while ((theEntry = s.GetNextEntry()) != null)
                 {
-                    Directory.CreateDirectory(Path.Combine(unzip_path, path));
-                }
+                    string file_name = System.IO.Path.GetFileName(theEntry.Name);
+                    string path = System.IO.Path.GetDirectoryName(theEntry.Name) ?? "";
+                    var write_file = Path.Combine(unzip_path, path, file_name);
+                    DateTime dt = theEntry.DateTime;
 
-                if (file_name.IsNotNullOrEmpty())
-                {
-                    try
+                    //  生成解压目录
+                    if (!Directory.Exists(Path.Combine(unzip_path, path)))
                     {
-                        //解压文件到指定的目录
-                        FileStream streamWriter = File.Create(write_file);
-                        int size = 2048;
-                        byte[] data = new byte[2048];
-                        while (true)
+                        Directory.CreateDirectory(Path.Combine(unzip_path, path));
+                    }
+                    
+
+                    if (file_name.IsNotNullOrEmpty())
+                    {
+                        try
                         {
-                            size = s.Read(data, 0, data.Length);
-                            if (size > 0)
+                            //解压文件到指定的目录
+                            FileStream streamWriter = File.Create(write_file);
+                            int size = 2048;
+                            byte[] data = new byte[2048];
+                            while (true)
                             {
-                                streamWriter.Write(data, 0, size);
+                                size = s.Read(data, 0, data.Length);
+                                if (size > 0)
+                                {
+                                    streamWriter.Write(data, 0, size);
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
-                            else
-                            {
-                                break;
-                            }
+                            streamWriter.Close();
+
+                            File.SetLastWriteTime(write_file, dt);
+                            File.SetCreationTime(write_file, dt);
                         }
-                        streamWriter.Close();
-                        
-                        File.SetLastWriteTime(write_file, dt);
-                        File.SetCreationTime(write_file, dt);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
+                        catch (Exception ex)
+                        {
+                            _Logger.Error($"解压失败：{ex.Message}\r\n{ex.StackTrace}");
+                            continue;
+                        }
                     }
                 }
+                s.Close();
             }
-            s.Close();
+                
         }
     }
 }

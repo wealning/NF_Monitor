@@ -13,7 +13,7 @@ namespace KLB_Monitor.window
 {
     public partial class FrmErr : Form
     {
-        public Action _ClearErrInfo;s
+        public Action _ClearErrInfo;
 
         public string TipMsg
         {
