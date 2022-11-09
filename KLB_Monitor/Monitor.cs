@@ -133,9 +133,9 @@ namespace KLB_Monitor
             this.MaximizeBox = false;   //屏蔽最大化按钮
             this.ShowInTaskbar = false;
 
-            this.notifyIcon1.Icon = new Icon("monitor.ico");
-            this.notifyIcon1.Text = "CEF监控程序";
-            this.notifyIcon1.Visible = true;
+            //this.notifyIcon1.Icon = new Icon("monitor.ico");
+            //this.notifyIcon1.Text = "CEF监控程序";
+            //this.notifyIcon1.Visible = true;
 
             
             listView1.Items.Clear();
