@@ -45,7 +45,6 @@ namespace KLB_Monitor
         private int ConnectRetryCount = 0;              //连接失败重试的次数
         private int ConnectCount = 0;
         private int MidlleConRetryCount = 0;            //中间件重连尝试次数
-        private bool UpdateProcess = false;             //是否更新程序
 
         //Task
         private BaseTask shutdownTask;
@@ -132,6 +131,7 @@ namespace KLB_Monitor
             this.MinimizeBox = false;   //屏蔽最小化按钮
             this.MaximizeBox = false;   //屏蔽最大化按钮
             this.ShowInTaskbar = false;
+            this.TopMost = false;
 
             //this.notifyIcon1.Icon = new Icon("monitor.ico");
             //this.notifyIcon1.Text = "CEF监控程序";
@@ -570,7 +570,8 @@ namespace KLB_Monitor
 
             try
             {
-                UpdateProcess = true;
+                //UpdateProcess = true;
+                shellMonitorTask.Stop();
                 string cef_dir_path = Path.GetDirectoryName(Global.param.cef_exe_full_path);
                 string cef_name = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
                 string extension = Path.GetExtension(Global.param.cef_exe_full_path);
@@ -657,7 +658,7 @@ namespace KLB_Monitor
             }
             finally
             {
-                UpdateProcess = false;
+                shellMonitorTask.Start();
                 Global.param.update_filePath = string.Empty;
                 Global.param.update_fileVersion = string.Empty;
             }
@@ -848,11 +849,7 @@ namespace KLB_Monitor
         {
             try
             {
-                if (UpdateProcess)
-                {
-                    return;
-                }
-
+                _Logger.Info("正在进行自助机监控");
                 FileInfo file = new FileInfo(HeartFile);
                 //同时校验壳体上一次被重启的时间，避免频繁重启
                 if (file.LastWriteTime.AddSeconds(10) < DateTime.Now && LastRunTime.AddSeconds(30) < DateTime.Now)
@@ -878,7 +875,7 @@ namespace KLB_Monitor
                 _Logger.Error($"壳体重启失败：{ex.Message}\r\n{ex.StackTrace}");
                 StepDetailsShow($"壳体重启失败：{ex.Message}\r\n{ex.StackTrace}");
             }
-            Thread.Sleep(10000);
+            Thread.Sleep(1000);
         }
 
         /// <summary>
