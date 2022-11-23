@@ -28,7 +28,7 @@ namespace KLB_Monitor
 {
     public partial class Monitor : Form
     {
-        #region 
+        #region property
         private ILog _Logger = LogManager.GetLogger("Monitor");
         private string device_id = "";  //设备id
         private string HeartFile = "";  //壳体心跳地址
@@ -43,7 +43,7 @@ namespace KLB_Monitor
         private int MiddleRetryFailCount = 0;           //中间件重启重试失败的次数
         private int MiddleRetryCount = 0;               //中间件重启重试的次数
         private int ConnectRetryCount = 0;              //连接失败重试的次数
-        private int ConnectCount = 0;
+        private int ConnectCount = 0;                   //连接次数
         private int MidlleConRetryCount = 0;            //中间件重连尝试次数
 
         //Task
@@ -349,7 +349,7 @@ namespace KLB_Monitor
             if((Global.param?.cef_exe_full_path ?? "").IsNotNullOrEmpty())
             {
                 string filePath = Path.GetDirectoryName(Global.param.cef_exe_full_path);
-                string shell_file = Path.Combine(Path.GetDirectoryName(filePath), "Logs");
+                string shell_file = Path.Combine(filePath, "Logs");
                 try
                 {
                     this.DeleteDir(shell_file, keepTime);
@@ -578,19 +578,11 @@ namespace KLB_Monitor
                 string file = $"{Global.param.download_url}/{Global.param.update_filePath}";
 
                 #region 停止程序
-                Process[] arrayProcess = Process.GetProcessesByName(cef_name);
-                if (arrayProcess != null && arrayProcess.Any())
-                {
-                    foreach (Process p in arrayProcess)
-                    {
-                        p.Kill();
-                        StepDetailsShow($"停止目标程序：{p.ProcessName}");
-                    }
-                }
+                this.StopProcess();
                 StepDetailsShow($"壳体程序终止完成");
                 #endregion
 
-                Thread.Sleep(2000);
+                Thread.Sleep(2000); //等待程序完全关闭
 
                 #region 下载
                 var zip_filename = Path.GetFileNameWithoutExtension(file);
@@ -672,25 +664,7 @@ namespace KLB_Monitor
             try
             {
                 #region 停止程序
-                if (Global.param == null)
-                {
-                    _Logger.Error("参数获取失败，无法重启壳体");
-                    return;
-                }
-                if (!File.Exists(Global.param.cef_exe_full_path))
-                {
-                    return;
-                }
-
-                string fileName = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
-                Process[] arrayProcess = Process.GetProcessesByName(fileName);
-                if (arrayProcess != null && arrayProcess.Any())
-                {
-                    foreach (Process p in arrayProcess)
-                    {
-                        p.Kill();
-                    }
-                }
+                this.StopProcess();
                 #endregion
 
                 //Environment.CurrentDirectory = Global.param.cef_exe_path;
@@ -705,6 +679,33 @@ namespace KLB_Monitor
             {
                 StepDetailsShow($"程序重启失败：{ex.Message}\r\n{ex.StackTrace}");
                 _Logger.Error($"程序重启失败：{ex.Message}\r\n{ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// 停止应用程序
+        /// </summary>
+        /// <param name="exeName"></param>
+        private void StopProcess()
+        {
+            if (Global.param == null)
+            {
+                _Logger.Error("参数获取失败，无法重启壳体");
+                return;
+            }
+            if (!File.Exists(Global.param.cef_exe_full_path))
+            {
+                return;
+            }
+
+            string fileName = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
+            Process[] arrayProcess = Process.GetProcessesByName(fileName);
+            if (arrayProcess != null && arrayProcess.Any())
+            {
+                foreach (Process p in arrayProcess)
+                {
+                    p.Kill();
+                }
             }
         }
 
@@ -849,7 +850,7 @@ namespace KLB_Monitor
         {
             try
             {
-                _Logger.Info("正在进行自助机监控");
+                //_Logger.Info("正在进行自助机监控");
                 FileInfo file = new FileInfo(HeartFile);
                 //同时校验壳体上一次被重启的时间，避免频繁重启
                 if (file.LastWriteTime.AddSeconds(10) < DateTime.Now && LastRunTime.AddSeconds(30) < DateTime.Now)
@@ -860,7 +861,6 @@ namespace KLB_Monitor
                         if(!this.IsErr && !this.IsShellErr)
                         {
                             //_Logger.Info("start ShellMonitor");
-
                             Task.Run(() => { OpenErrWindow("壳体启动失败", (int)EnumErrorLevel.Shell); });
                         }
                     }

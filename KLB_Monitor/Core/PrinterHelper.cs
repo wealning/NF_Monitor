@@ -14,8 +14,11 @@ namespace KLB_Monitor.Core
     /// <summary>
     /// 普通打印机监控
     /// </summary>
-    public static class PrinterHelper
+    public class PrinterHelper
     {
+        private static ILog _Logger = LogManager.GetLogger("PrinterHelper");
+        private static int count = 0;
+
         /// <summary>
         /// 
         /// </summary>
@@ -84,6 +87,16 @@ namespace KLB_Monitor.Core
         {
             int intValue = GetPrinterStatusInt(PrinterName);
             string strRet = string.Empty;
+            if (intValue != 0 || count >= 20) 
+            {
+                count = 0;
+            }
+            else
+            {
+                count++;
+                return "";
+            }
+
             switch (intValue)
             {
                 case 0:
@@ -164,6 +177,8 @@ namespace KLB_Monitor.Core
                     strRet = "";
                     break;
             }
+            
+            _Logger.Debug($"打印机：{PrinterName}intValue：{intValue}strRet{strRet}");
             return strRet;
         }
 

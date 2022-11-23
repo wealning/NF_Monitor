@@ -34,7 +34,7 @@
             // tipLabel
             // 
             this.tipLabel.BackColor = System.Drawing.Color.Transparent;
-            this.tipLabel.Font = new System.Drawing.Font("宋体", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.tipLabel.Font = new System.Drawing.Font("宋体", 36F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.tipLabel.ForeColor = System.Drawing.Color.White;
             this.tipLabel.Location = new System.Drawing.Point(8, 60);
             this.tipLabel.Name = "tipLabel";
