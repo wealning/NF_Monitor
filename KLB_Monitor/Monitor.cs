@@ -869,6 +869,10 @@ namespace KLB_Monitor
                         Restart();
                     }
                 }
+                else 
+                {
+                    ShellRestartFailCount = 0;
+                }
             }
             catch (Exception ex)
             {
