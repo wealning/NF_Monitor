@@ -58,13 +58,14 @@ namespace KLB_Monitor
         private BaseTask hisTask;
 
         Server server = new Server();
+        RedisHelper redisHandle = new RedisHelper();
         private Queue eventQueue = new Queue();
 
         #region 是否错误
-        private bool IsErr = false;   //是否发生错误，总体的
-        private bool IsSystemErr = false; //错误范围：联网失败
-        private bool IsThirdErr = false;  //错误范围：中间件、HIS、打印机监控异常
-        private bool IsShellErr = false;  //错误范围：壳体系统异常
+        private bool IsErr = false;         //是否发生错误，总体的
+        private bool IsSystemErr = false;   //错误范围：联网失败
+        private bool IsThirdErr = false;    //错误范围：中间件、HIS、打印机监控异常
+        private bool IsShellErr = false;    //错误范围：壳体系统异常
         private bool IsHisMonitor = false;  //是否启用HIS监控
         #endregion
         #endregion
@@ -90,13 +91,13 @@ namespace KLB_Monitor
         }
 
         /// <summary>
-        /// 
+        /// 程序退出前处理
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Monitor_FormClosing(object sender, FormClosingEventArgs e)
         {
-            DialogResult result = MessageBox.Show("是否退出？选否,最小化到托盘", "操作提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show("是否退出？选否,最小化", "操作提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
                 StopTask();
@@ -133,11 +134,6 @@ namespace KLB_Monitor
             this.ShowInTaskbar = false;
             this.TopMost = false;
 
-            //this.notifyIcon1.Icon = new Icon("monitor.ico");
-            //this.notifyIcon1.Text = "CEF监控程序";
-            //this.notifyIcon1.Visible = true;
-
-            
             listView1.Items.Clear();
             StepDetailsShow("程序开始运行");
 
@@ -328,8 +324,14 @@ namespace KLB_Monitor
         /// </summary>
         private void DeleteLog()
         {
-            var day = ConfigurationManager.AppSettings.Get("DeleteLogDay").ToString();
-            DateTime keepTime = DateTime.Now.AddDays(-day.ToInt());
+            var DeleteLogDay = ConfigurationManager.AppSettings.Get("DeleteLogDay").ToString();
+            int day = DeleteLogDay.ToInt();
+            if(day <= 0) 
+            {
+                //默认是7天
+                day = 7;
+            }
+            DateTime keepTime = DateTime.Now.AddDays(-day);
             #region 删除监控程序的日志
             _Logger.Info("监控程序日志清除开始");
             string monitor_file = Path.Combine(Environment.CurrentDirectory, "Logs");
@@ -348,15 +350,15 @@ namespace KLB_Monitor
             _Logger.Info("壳体日志清除开始");
             if((Global.param?.cef_exe_full_path ?? "").IsNotNullOrEmpty())
             {
-                string filePath = Path.GetDirectoryName(Global.param.cef_exe_full_path);
-                string shell_file = Path.Combine(filePath, "Logs");
                 try
                 {
+                    string filePath = Path.GetDirectoryName(Global.param.cef_exe_full_path);
+                    string shell_file = Path.Combine(filePath, "Logs");
                     this.DeleteDir(shell_file, keepTime);
                 }
                 catch (Exception ex)
                 {
-                    _Logger.Error($"{shell_file}路径日志删除失败{ex.Message}");
+                    _Logger.Error($"壳体日志删除失败{ex.Message}");
                 }
                 _Logger.Info("壳体日志清除结束");
             }
@@ -667,8 +669,6 @@ namespace KLB_Monitor
                 this.StopProcess();
                 #endregion
 
-                //Environment.CurrentDirectory = Global.param.cef_exe_path;
-                //Process.Start(Global.param.cef_exe_name + ".exe", "");
                 Process process = new Process();
                 process.StartInfo.FileName = Global.param.cef_exe_full_path;
                 process.Start();
@@ -1003,9 +1003,13 @@ namespace KLB_Monitor
                         err_msg = PrinterHelper.GetPrinterStatus(orinary);
                         if (err_msg.IsNotNullOrEmpty() && !this.IsErr)
                         {
-                            //_Logger.Info("start PrinterMonitor");
                             //如果有返回则认为有异常情况
                             Task.Run(() => { OpenErrWindow($"打印机{orinary}异常：{err_msg}", (int)EnumErrorLevel.Third); });
+                            redisHandle.SetValue(orinary, err_msg);
+                        }
+                        else 
+                        {
+                            redisHandle.RemoveValue(orinary);
                         }
                     }
                 }
@@ -1039,6 +1043,11 @@ namespace KLB_Monitor
                         {
                             //_Logger.Info("start EpsonPrinterMonitor");
                             Task.Run(() => { OpenErrWindow($"打印机{epson}异常：{err_msg}", (int)EnumErrorLevel.Third); });
+                            redisHandle.SetValue(epson, err_msg);
+                        }
+                        else 
+                        {
+                            redisHandle.RemoveValue(epson);
                         }
                     }
                 }

@@ -12,14 +12,14 @@ namespace KLB_Monitor.Model.Global
     public class Global
     {
         /// <summary>
-        /// 
+        /// 服务端访问地址
         /// </summary>
-        public string server_url = "";
+        //public string server_url { get; set; }
 
         /// <summary>
         /// 设备id
         /// </summary>
-        public string device_id { get; set; }
+        //public string device_id { get; set; }
 
         /// <summary>
         /// 是否已连接

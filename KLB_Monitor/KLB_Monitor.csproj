@@ -12,10 +12,12 @@
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.15" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.4.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.86" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
   </ItemGroup>
@@ -36,6 +38,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsetting.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Dll\ColdAr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

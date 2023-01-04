@@ -81,6 +81,7 @@ namespace KLB_Monitor.Core
 
             try
             {
+                //var result = HttpUtil.Get(new Uri(new Uri(url), $"/third/getMonitorPara?device_id={device_id.ToLong()}"));
                 var result = HttpUtil.Get($"{url}/third/getMonitorPara?device_id={device_id.ToLong()}");
                 _Logger.Debug($"获取设备参数 返回：{result}");
                 var data = JsonConvert.DeserializeObject<BaseRsp<param_rsp>>(result);
