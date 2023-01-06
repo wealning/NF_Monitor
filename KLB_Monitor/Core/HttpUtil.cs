@@ -248,6 +248,20 @@ namespace KLB_Monitor.Core
             return result;
         }
 
+        public static string Get(string baseUrl, string nextUrl)
+        {
+            string result = "";
+
+            var url = new Uri(new Uri(baseUrl), nextUrl);
+            HttpWebRequest httpWebRequest = WebRequest.Create(url) as HttpWebRequest;
+            httpWebRequest.Method = "GET";
+            using (HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse()) {
+                using StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream(), Encoding.UTF8);
+                result = streamReader.ReadToEnd();
+            }
+
+            return result;
+        }
 
         public static string Get(string url, Dictionary<string, object> header, Dictionary<string, object> param, int timeout, ref string statusCode)
         {
@@ -282,4 +296,14 @@ namespace KLB_Monitor.Core
             return result;
         }
     }
+
+    //public class HttpClientUtil
+    //{
+    //    public static async Task<string> Get(string baseUrl, string nextUri)
+    //    {
+    //        var client = new HttpClient();
+    //        client.BaseAddress = new Uri(baseUrl);
+    //        await client.GetAsync(nextUri);
+    //    }
+    //}
 }

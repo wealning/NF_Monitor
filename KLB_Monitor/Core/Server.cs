@@ -22,7 +22,6 @@ namespace KLB_Monitor.Core
 
         public Server()
         {
-
         }
 
         /// <summary>
@@ -46,7 +45,6 @@ namespace KLB_Monitor.Core
                     _Logger.Debug($"检查连接状态 请求 status:1");
                 }
                 var data = JsonConvert.DeserializeObject<BaseRsp<string>>(result);
-                //_Logger.Debug($"检查连接状态 返回：{result}");
                 if (data != null && data.code == (int)EnumCommunicationStatus.Success)
                 {
                     IsConnect = true;
@@ -66,13 +64,12 @@ namespace KLB_Monitor.Core
             return IsConnect;
         }
 
-
         /// <summary>
         /// 获取参数
         /// </summary>
         /// <param name="url"></param>
         /// <param name="device_id"></param>
-        public string GetParameter(string url,string device_id)
+        public string GetParameter(string url, string device_id)
         {
             if (!Global.IsConnect)
             {
@@ -104,21 +101,9 @@ namespace KLB_Monitor.Core
                     if ((para?.printer_name ?? "").IsNotNullOrEmpty())
                     {
                         string[] strArr = para.printer_name.Split(',');
-                        foreach (var item in strArr)
-                        {
-                            if (item.Trim().IsNotNullOrEmpty())
-                            {
-                                Global.param.printeNameList.Add(item.Trim());
-                            }
-                        }
+                        Global.param.printeNameList = strArr.Where(x => x.Trim().IsNotNullOrEmpty()).Select(x => x.Trim()).ToList();
                     }
-                    //
-                    if(Global.param.middle_url.IsNotNullOrEmpty()
-                        && (Global.param.middle_url.EndsWith("/") || Global.param.middle_url.EndsWith("\\")))
-                    {
-                        Global.param.middle_url = Global.param.middle_url.Substring(0, Global.param.middle_url.Length - 1);
-                    }
-
+                    
                 }
                 else
                 {
@@ -204,12 +189,6 @@ namespace KLB_Monitor.Core
                     {
                         Global.param.update_filePath = data.data?.filePath ?? "";
                         Global.param.update_fileVersion = data.data?.fileName ?? "";
-                        //Global.param.update_version = Global.param.update_version.Replace("/", "\\");
-                        if (Global.param.update_filePath.StartsWith("/"))
-                        {
-                            Global.param.update_filePath = Global.param.update_filePath.Substring(1, Global.param.update_filePath.Length - 1);
-                        }
-
                     }
 
                     return (data?.data?.code ?? "").ToInt();
@@ -313,11 +292,10 @@ namespace KLB_Monitor.Core
         public bool CheckMiddleOnline()
         {
             bool isonline = false;
-
             try
             {
-                var result = HttpUtil.Get($"{Global.param.middle_url}/common/systime");
-                _Logger.Debug($"中间件监控请求：{Global.param.middle_url}/common/systime");
+                var result = HttpUtil.Get(Global.param.middle_url, "/common/systime");
+                _Logger.Debug($"中间件监控请求：{result}");
 
                 var data = JsonConvert.DeserializeObject<BaseMiddleRsp<DateTime>>(result);
                 if (data.success.Value && data.data != DateTime.MinValue)
@@ -332,6 +310,5 @@ namespace KLB_Monitor.Core
 
             return isonline;
         }
-
     }
 }

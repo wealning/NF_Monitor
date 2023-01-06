@@ -205,7 +205,7 @@ namespace KLB_Monitor.Core
             }
             catch (Exception e)
             {
-                log.Error("同步时间失败" + e.Message);
+                log.Error("同步时间失败" + e.ToString());
             }
             return result;
         }

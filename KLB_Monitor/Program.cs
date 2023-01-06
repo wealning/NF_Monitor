@@ -6,6 +6,9 @@ using System.Security.Principal;
 
 namespace KLB_Monitor
 {
+    /// <summary>
+    /// 
+    /// </summary>
     static class Program
     {
         /// <summary>
@@ -74,9 +77,7 @@ namespace KLB_Monitor
                 .AddJsonFile("appsetting.json")
                 .Build();
 
-            //IConfiguration builder = configbuilder.Build();
             services.AddSingleton<IConfiguration>(builder);
-            
         }
 
         /// <summary>

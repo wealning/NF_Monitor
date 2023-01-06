@@ -87,7 +87,7 @@ namespace KLB_Monitor.Core
         {
             int intValue = GetPrinterStatusInt(PrinterName);
             string strRet = string.Empty;
-            if (intValue != 0 || count >= 20) 
+            if (intValue != 0 || count >= 50) 
             {
                 count = 0;
             }
@@ -205,9 +205,7 @@ namespace KLB_Monitor.Core
                     {
                         PRINTER_INFO_2 Info2 = new PRINTER_INFO_2();
 
-
                         Info2 = (PRINTER_INFO_2)Marshal.PtrToStructure(pAddr, typeof(PRINTER_INFO_2));
-
 
                         intRet = System.Convert.ToInt32(Info2.Status);
                     }
@@ -216,10 +214,8 @@ namespace KLB_Monitor.Core
                 ClosePrinter(hPrinter);
             }
 
-
             return intRet;
         }
-
     }
 
     /// <summary>
@@ -368,14 +364,6 @@ namespace KLB_Monitor.Core
 
             #endregion
             return err_msg;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private static void ii()
-        {
-
         }
     }
 }

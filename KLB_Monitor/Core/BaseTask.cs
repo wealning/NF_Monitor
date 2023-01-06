@@ -22,7 +22,8 @@ namespace KLB_Monitor.Core
         {
             tokenSource = new CancellationTokenSource();
             token = tokenSource.Token;
-            task = new Task(() => {
+            task = new Task(() => 
+            {
                 while (!token.IsCancellationRequested)
                 {
                     work();
@@ -47,8 +48,9 @@ namespace KLB_Monitor.Core
                     flag = true;
                 }
 
-                if (task?.Status == TaskStatus.RanToCompletion || task?.Status == TaskStatus.Faulted ||
-                    task?.Status == TaskStatus.Canceled)
+                if (task?.Status == TaskStatus.RanToCompletion 
+                    || task?.Status == TaskStatus.Faulted 
+                    || task?.Status == TaskStatus.Canceled)
                 {
                     NewTask();
                     task.Start();

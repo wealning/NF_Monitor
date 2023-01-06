@@ -10,6 +10,8 @@ using log4net;
 using Microsoft.VisualBasic.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Quartz.Impl;
+using Quartz;
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
@@ -23,6 +25,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Quartz.Logging.OperationName;
+using KLB_Monitor.Job;
 
 namespace KLB_Monitor
 {
@@ -83,11 +87,12 @@ namespace KLB_Monitor
         /// <param name="e"></param>
         private void Monitor_Load(object sender, EventArgs e)
         {
+            FileHelper.DeleteLog();    //清除日志
             Init();
             ParamInit();
-            DeleteLog();    //清除日志
             UpdateLocalTime();
             TaskInit();     //last
+            //await StartScheduler(); //计划任务，未完成
         }
 
         /// <summary>
@@ -225,6 +230,33 @@ namespace KLB_Monitor
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task StartScheduler()
+        {
+            ISchedulerFactory schedulerFactory = new StdSchedulerFactory();
+            IScheduler scheduler = await schedulerFactory.GetScheduler();
+
+            IJobDetail job = JobBuilder.Create<EpsonMonitorJob>().Build();
+
+            try 
+            {
+                ISimpleTrigger trigger = (ISimpleTrigger)TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(3).WithRepeatCount(50)).Build();
+
+                await scheduler.ScheduleJob(job, trigger);
+
+                await scheduler.Start();
+
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                await scheduler.Shutdown();
+            }
+        }
+
+        /// <summary>
         /// 开启任务
         /// </summary>
         private void StartTask()
@@ -318,105 +350,6 @@ namespace KLB_Monitor
         #endregion
 
         #region private
-        
-        /// <summary>
-        /// 清除日志
-        /// </summary>
-        private void DeleteLog()
-        {
-            var DeleteLogDay = ConfigurationManager.AppSettings.Get("DeleteLogDay").ToString();
-            int day = DeleteLogDay.ToInt();
-            if(day <= 0) 
-            {
-                //默认是7天
-                day = 7;
-            }
-            DateTime keepTime = DateTime.Now.AddDays(-day);
-            #region 删除监控程序的日志
-            _Logger.Info("监控程序日志清除开始");
-            string monitor_file = Path.Combine(Environment.CurrentDirectory, "Logs");
-            try
-            {
-                this.DeleteDir(monitor_file, keepTime);
-            }
-            catch (Exception ex)
-            {
-                _Logger.Error($"{monitor_file}路径日志删除失败{ex.Message}");
-            }
-            _Logger.Info("监控程序日志清除结束");
-            #endregion
-
-            #region 删除壳体的日志
-            _Logger.Info("壳体日志清除开始");
-            if((Global.param?.cef_exe_full_path ?? "").IsNotNullOrEmpty())
-            {
-                try
-                {
-                    string filePath = Path.GetDirectoryName(Global.param.cef_exe_full_path);
-                    string shell_file = Path.Combine(filePath, "Logs");
-                    this.DeleteDir(shell_file, keepTime);
-                }
-                catch (Exception ex)
-                {
-                    _Logger.Error($"壳体日志删除失败{ex.Message}");
-                }
-                _Logger.Info("壳体日志清除结束");
-            }
-            #endregion
-        }
-
-        /// <summary>
-        /// 删除路径下所有的文件和文件夹
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="keepTime">删除多久之前的数据</param>
-        private void DeleteDir(string file, DateTime keepTime)
-        {
-            try
-            {
-                //去除文件夹和子文件的只读属性
-                //去除文件夹的只读属性
-                DirectoryInfo fileInfo = new DirectoryInfo(file);
-                fileInfo.Attributes = FileAttributes.Normal & FileAttributes.Directory;
-
-                //去除文件的只读属性
-                File.SetAttributes(file, FileAttributes.Normal);
-
-                //判断文件夹是否还存在
-                if (Directory.Exists(file))
-                {
-                    foreach (string f in Directory.GetFileSystemEntries(file))
-                    {
-                        if (File.Exists(f))
-                        {
-                            FileInfo fl = new FileInfo(f);
-                            //如果有子文件删除文件
-                            if(keepTime > fl.LastWriteTime)
-                            {
-                                //超时的删除
-                                File.Delete(f);
-                            }
-                        }
-                        else
-                        {
-                            //循环递归删除子文件夹
-                            DeleteDir(f, keepTime);
-                        }
-                    }
-
-                    //删除空文件夹
-                    if (!Directory.GetFileSystemEntries(file).Any())
-                    {
-                        Directory.Delete(file);
-                    }
-                }
-
-            }
-            catch (Exception ex) // 异常处理
-            {
-                _Logger.Error($"DeleteDir Fail{ex.Message}\r\n{ex.StackTrace}");
-            }
-        }
         
         /// <summary>
         /// 自动关机
@@ -524,25 +457,25 @@ namespace KLB_Monitor
         {
             try
             {
-                ConnectCount++;
-                if(!server.IsConnet(server_url, device_id, ConnectCount >= 10 ? 1 : 0))
+                if (!server.IsConnet(server_url, device_id, ConnectCount >= 10 ? 1 : 0))
                 {
                     StepDetailsShow("网络连接异常");
                     ConnectRetryCount++;
 
                     if(ConnectRetryCount >= 10 && !this.IsErr)
                     {
-                        //_Logger.Info("start CheckConnect");
                         Task.Run(() => { OpenErrWindow("联网异常", (int)EnumErrorLevel.System); });
                     }
                 }
                 else
                 {
-                    if (ConnectCount >= 10)
-                    {
-                        ConnectCount = 0;
-                    }
                     ConnectRetryCount = 0;
+                }
+
+                ConnectCount++;
+                if (ConnectCount >= 10) 
+                {
+                    ConnectCount = 0;
                 }
             }
             catch (Exception ex)
@@ -572,14 +505,22 @@ namespace KLB_Monitor
 
             try
             {
-                //UpdateProcess = true;
-                shellMonitorTask.Stop();
+                List<string> zipFiles = new List<string> { ".7z", ".rar", ".zip" }; //当前支持的更新包格式
                 string cef_dir_path = Path.GetDirectoryName(Global.param.cef_exe_full_path);
                 string cef_name = Path.GetFileNameWithoutExtension(Global.param.cef_exe_full_path);
                 string extension = Path.GetExtension(Global.param.cef_exe_full_path);
-                string file = $"{Global.param.download_url}/{Global.param.update_filePath}";
+
+                string file = new Uri(new Uri(Global.param.download_url), Global.param.update_filePath).ToString();
+                var zip_extension = Path.GetExtension(file);
+                if (!zipFiles.Contains(zip_extension)) 
+                {
+                    StepDetailsShow($"当前更新包格式暂不支持{zip_extension}");
+                    _Logger.Error($"当前更新包格式暂不支持{zip_extension}");
+                    return;
+                }
 
                 #region 停止程序
+                shellMonitorTask.Stop();
                 this.StopProcess();
                 StepDetailsShow($"壳体程序终止完成");
                 #endregion
@@ -588,7 +529,7 @@ namespace KLB_Monitor
 
                 #region 下载
                 var zip_filename = Path.GetFileNameWithoutExtension(file);
-                var zip_extension = Path.GetExtension(file);
+                
                 var fileName = $"{zip_filename}{zip_extension}";
                 if (!Directory.Exists(cef_dir_path))
                 {
@@ -790,8 +731,8 @@ namespace KLB_Monitor
             try
             {
                 //先停止再开启
-                StopWindowsServer(service_name, 10000);
-                StartWindowsServer(service_name, 10000);
+                StopWindowsServer(service_name);
+                StartWindowsServer(service_name);
             }
             catch (Exception ex)
             {
@@ -804,7 +745,7 @@ namespace KLB_Monitor
         /// </summary>
         /// <param name="service_name">服务名称</param>
         /// <param name="timeout">超时时间</param>
-        private void StartWindowsServer(string service_name, int timeout=1000)
+        private void StartWindowsServer(string service_name, int timeout = 10000)
         {
             try
             {
@@ -825,7 +766,7 @@ namespace KLB_Monitor
         /// </summary>
         /// <param name="service_name">服务名称</param>
         /// <param name="timeout">超时时间</param>
-        private void StopWindowsServer(string service_name,int timeout = 1000)
+        private void StopWindowsServer(string service_name, int timeout = 10000)
         {
             try
             {
@@ -993,6 +934,7 @@ namespace KLB_Monitor
             try
             {
                 string err_msg = string.Empty;
+                TimeSpan timeSpan = TimeSpan.FromMinutes(10);   //默认预留10分钟
 
                 if (Global.param != null && Global.param.printeNameList != null && Global.param.printeNameList.Any() && !this.IsThirdErr)
                 {
@@ -1005,7 +947,7 @@ namespace KLB_Monitor
                         {
                             //如果有返回则认为有异常情况
                             Task.Run(() => { OpenErrWindow($"打印机{orinary}异常：{err_msg}", (int)EnumErrorLevel.Third); });
-                            redisHandle.SetValue(orinary, err_msg);
+                            redisHandle.SetValue(orinary, err_msg, timeSpan);
                         }
                         else 
                         {
@@ -1031,6 +973,7 @@ namespace KLB_Monitor
             try
             {
                 string err_msg = string.Empty;
+                TimeSpan timeSpan= TimeSpan.FromMinutes(10);    //默认预留10分钟
                 if (Global.param != null && Global.param.printeNameList != null && Global.param.printeNameList.Any() && !this.IsThirdErr)
                 {
                     var epson_prints = Global.param.printeNameList.Where(x => x.ToUpper().StartsWith("EPSON")).ToList();
@@ -1043,7 +986,7 @@ namespace KLB_Monitor
                         {
                             //_Logger.Info("start EpsonPrinterMonitor");
                             Task.Run(() => { OpenErrWindow($"打印机{epson}异常：{err_msg}", (int)EnumErrorLevel.Third); });
-                            redisHandle.SetValue(epson, err_msg);
+                            redisHandle.SetValue(epson, err_msg, timeSpan);
                         }
                         else 
                         {

@@ -38,7 +38,14 @@ namespace KLB_Monitor.Core
         /// <returns></returns>
         public bool SetValue(string key, string value)
         {
+            if(key.IsNullOrEmpty()) return false;
             return db.StringSet(key, value);
+        }
+
+        public bool SetValue(string key, string value, TimeSpan span)
+        {
+            if(key.IsNullOrEmpty()) return false;
+            return db.StringSet(key, value, span);
         }
 
         /// <summary>
@@ -48,6 +55,7 @@ namespace KLB_Monitor.Core
         /// <returns></returns>
         public string GetValue(string key)
         {
+            if (key.IsNullOrEmpty()) return string.Empty;
             return db.StringGet(key);
         }
 
@@ -58,6 +66,7 @@ namespace KLB_Monitor.Core
         /// <returns></returns>
         public bool RemoveValue(string key)
         {
+            if(key.IsNullOrEmpty()) return false;
             return db.KeyDelete(key);
         }
     }
